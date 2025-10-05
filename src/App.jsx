@@ -1,49 +1,58 @@
-import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
-// Pages
+import React, { useState } from 'react';
+// 👇 useLocation を追加でインポートします
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Home from "./pages/Home";
 import Alarm from "./pages/Alarm";
-import ScheduleInput from "./pages/ScheduleInput";
-import Today from "./pages/Today";
-import DayViewPage from './pages/DayViewPage';
-
-// Components
 import Navbar from "./components/Navbar";
 import AddButton from './components/AddButton';
-import AddScheduleModal from './components/AddScheduleModal'; // モーダルをインポート
+import Today from "./pages/Today";
+import DayViewPage from './pages/DayViewPage';
+import SplashPage from './pages/SplashPage';
+import AddScheduleModal from './components/AddScheduleModal';
 
-function App() {
-  // モーダルの表示状態を管理する State (true: 表示, false: 非表示)
+// Appの内容を別のコンポーネントに分離し、フックを使えるようにします
+function AppContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const location = useLocation(); // 現在のURLの情報を取得
 
-  // モーダルを開く関数
   const openModal = () => setIsModalOpen(true);
-  // モーダルを閉じる関数
   const closeModal = () => setIsModalOpen(false);
 
+  // もしURLが'/'（最初のページ）なら、スプラッシュ画面だけを表示
+  if (location.pathname === '/') {
+    return (
+      <Routes>
+        <Route path="/" element={<SplashPage />} />
+      </Routes>
+    );
+  }
+
+  // それ以外のページなら、いつものスマホ画面を表示
+  return (
+    <div className="phone-frame">
+      <Navbar /> 
+      <main className="main-content">
+        <Routes>
+          <Route path="/home" element={<Home />} /> {/* Homeのパスを/homeに変更 */}
+          <Route path="/alarm" element={<Alarm />} />
+          <Route path="/today" element={<Today />} />
+          <Route path="/day/:date" element={<DayViewPage />} />
+        </Routes>
+      </main>
+      <AddButton onClick={openModal}/>
+      {isModalOpen && <AddScheduleModal onClose={closeModal} />}
+    </div>
+  );
+}
+
+// AppコンポーネントはRouterでAppContentを囲むだけのシンプルな作りにします
+function App() {
   return (
     <Router>
-      <div className="phone-frame">
-        <Navbar /> 
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/alarm" element={<Alarm />} />
-            <Route path="/today" element={<Today />} />
-            <Route path="/schedule" element={<ScheduleInput />} />
-            <Route path="/day/:date" element={<DayViewPage />} />
-          </Routes>
-        </main>
-        
-        {/* ボタンがクリックされたら openModal を実行 */}
-        <AddButton onClick={openModal} />
-
-        {/* isModalOpen が true の場合のみモーダルを表示 */}
-        {isModalOpen && <AddScheduleModal onClose={closeModal} />}
-      </div>
+      <AppContent />
     </Router>
   );
 }
 
 export default App;
+
